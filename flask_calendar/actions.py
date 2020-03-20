@@ -26,6 +26,12 @@ def get_authentication() -> Authentication:
 
 @authenticated
 def index_action() -> Response:
+    """
+    Description: fetch the user data, and use the user data to call the
+    main calendar action.
+
+    """
+    print("testing only | index_action")
     username = get_session_username(session_id=str(request.cookies.get(constants.SESSION_ID)))
     authentication = get_authentication()
     user_data = authentication.user_data(username)
@@ -33,10 +39,12 @@ def index_action() -> Response:
 
 
 def login_action() -> Response:
+    print("testing only | login_action")
     return cast(Response, render_template("login.html"))
 
 
 def do_login_action() -> Response:
+    print("testing only | do_login_action")
     username = request.form.get("username", "")
     password = request.form.get("password", "")
     authentication = get_authentication()
@@ -69,10 +77,17 @@ def do_login_action() -> Response:
 @authenticated
 @authorized
 def main_calendar_action(calendar_id: str) -> Response:
+    """
+    Description: this function is called after login. The function fetches all the
+    tasks tied to the calendar_id.
+
+    """
+    print("testing only | in main_calendar_action | calendar_id: ", calendar_id)
     GregorianCalendar.setfirstweekday(current_app.config["WEEK_STARTING_DAY"])
 
     current_day, current_month, current_year = GregorianCalendar.current_date()
     year = int(request.args.get("y", current_year))
+    # make sure the year does not go over the max bound and the min bound
     year = max(min(year, current_app.config["MAX_YEAR"]), current_app.config["MIN_YEAR"])
     month = int(request.args.get("m", current_month))
     month = max(min(month, 12), 1)
@@ -84,6 +99,8 @@ def main_calendar_action(calendar_id: str) -> Response:
         view_past_tasks = request.cookies.get("ViewPastTasks", "1") == "1"
 
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
+    # right now the week starting date is sunday(0)
+    print("testing only | current_app.config WEEK_STARTING_DAY: ", current_app.config["WEEK_STARTING_DAY"])
     try:
         data = calendar_data.load_calendar(calendar_id)
     except FileNotFoundError:
@@ -122,6 +139,12 @@ def main_calendar_action(calendar_id: str) -> Response:
 @authenticated
 @authorized
 def new_task_action(calendar_id: str, year: int, month: int) -> Response:
+    """
+    Description: return the task creation page, trigged by "+" button on the main page
+    The default date is "today"
+
+    """
+    print("testing only | in new_task_action")
     GregorianCalendar.setfirstweekday(current_app.config["WEEK_STARTING_DAY"])
 
     current_day, current_month, current_year = GregorianCalendar.current_date()
@@ -165,6 +188,7 @@ def new_task_action(calendar_id: str, year: int, month: int) -> Response:
 @authenticated
 @authorized
 def edit_task_action(calendar_id: str, year: int, month: int, day: int, task_id: int) -> Response:
+    print("testing only | in edit_task_action")
     month_names = GregorianCalendar.MONTH_NAMES
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
 
@@ -208,6 +232,7 @@ def edit_task_action(calendar_id: str, year: int, month: int, day: int, task_id:
 @authenticated
 @authorized
 def update_task_action(calendar_id: str, year: str, month: str, day: str, task_id: str) -> Response:
+    print("testing only | in update_task_action")
     # Logic is same as save + delete, could refactor but can wait until need to change any save/delete logic
 
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
@@ -262,6 +287,7 @@ def update_task_action(calendar_id: str, year: str, month: str, day: str, task_i
 @authenticated
 @authorized
 def save_task_action(calendar_id: str) -> Response:
+    print("testing only | in save_task_action")
     title = request.form["title"].strip()
     date = request.form.get("date", "")
     if len(date) > 0:
@@ -279,6 +305,7 @@ def save_task_action(calendar_id: str) -> Response:
     repetition_type = request.form.get("repetition_type")
     repetition_subtype = request.form.get("repetition_subtype")
     repetition_value = int(request.form["repetition_value"])
+    print("testing only | request: ", str(request))
 
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
     calendar_data.create_task(calendar_id=calendar_id,
@@ -294,6 +321,7 @@ def save_task_action(calendar_id: str) -> Response:
                               repetition_type=repetition_type,
                               repetition_subtype=repetition_subtype,
                               repetition_value=repetition_value)
+    print("testing only | request: title {}, color {} repitition_type {} repetition value {}".format(title, color, repetition_type, repetition_value))
 
     if year is None:
         return redirect("{}/{}/".format(current_app.config["BASE_URL"], calendar_id), code=302)
@@ -304,6 +332,7 @@ def save_task_action(calendar_id: str) -> Response:
 @authenticated
 @authorized
 def delete_task_action(calendar_id: str, year: str, month: str, day: str, task_id: str) -> Response:
+    print("testing only | in delete_task_action")
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
     calendar_data.delete_task(calendar_id=calendar_id,
                               year_str=year,
@@ -317,6 +346,7 @@ def delete_task_action(calendar_id: str, year: str, month: str, day: str, task_i
 @authenticated
 @authorized
 def update_task_day_action(calendar_id: str, year: str, month: str, day: str, task_id: str) -> Response:
+    print("testing only | in update_task_day_action")
     new_day = request.data.decode("utf-8")
 
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
@@ -333,6 +363,7 @@ def update_task_day_action(calendar_id: str, year: str, month: str, day: str, ta
 @authenticated
 @authorized
 def hide_repetition_task_instance_action(calendar_id: str, year: str, month: str, day: str, task_id: str) -> Response:
+    print("testing only | in hide_repetition_task_instance_action")
     calendar_data = CalendarData(current_app.config["DATA_FOLDER"], current_app.config["WEEK_STARTING_DAY"])
     calendar_data.hide_repetition_task_instance(calendar_id=calendar_id,
                                                 year_str=year,
